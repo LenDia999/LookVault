@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once 'configdatabase.php';
+require_once __DIR__ . '/includes/media-storage.php';
 
 if (!isset($_SESSION['usuario_id'])) {
     header('Location: login.php');
@@ -132,7 +133,7 @@ include 'includes/header.php';
                                      data-categoria="<?php echo strtolower(htmlspecialchars($peca['categoria'])); ?>"
                                      onclick="togglePeca(this, <?php echo $peca['id']; ?>)">
                                     <div class="peca-row-check"><i class="fas fa-check"></i></div>
-                                    <?php if (!empty($peca['foto']) && file_exists($peca['foto'])): ?>
+                                    <?php if (lookvaultImageAvailable($peca['foto'] ?? '')): ?>
                                         <img src="<?php echo htmlspecialchars($peca['foto']); ?>" class="peca-row-thumb" alt="" />
                                     <?php else: ?>
                                         <div class="peca-row-thumb"><i class="fas fa-tshirt"></i></div>

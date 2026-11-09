@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once 'configdatabase.php';
+require_once __DIR__ . '/includes/media-storage.php';
 
 if (!isset($_SESSION['usuario_id'])) {
     header('Location: login.php');
@@ -118,7 +119,7 @@ include 'includes/header.php';
                     <article class="look-card-new animate-fade-up animate-delay-<?php echo ($index % 4) + 1; ?>"
                              data-ocasiao="<?php echo htmlspecialchars($look['ocasiao']); ?>">
                         <div class="look-image-new">
-                            <?php if (!empty($look['pecas']) && !empty($look['pecas'][0]['foto']) && file_exists($look['pecas'][0]['foto'])): ?>
+                            <?php if (!empty($look['pecas']) && lookvaultImageAvailable($look['pecas'][0]['foto'] ?? '')): ?>
                                 <img src="<?php echo htmlspecialchars($look['pecas'][0]['foto']); ?>" alt="<?php echo htmlspecialchars($look['nome']); ?>" loading="lazy" />
                             <?php else: ?>
                                 <img src="https://via.placeholder.com/400x500/f5f0ea/b8a68c?text=<?php echo urlencode($look['nome']); ?>" alt="<?php echo htmlspecialchars($look['nome']); ?>" loading="lazy" />

@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once 'configdatabase.php';
+require_once __DIR__ . '/includes/media-storage.php';
 
 // Buscar foto de perfil
 $foto_perfil = '';
@@ -165,7 +166,7 @@ $conn->close();
             
             <?php if (isset($_SESSION['usuario_id'])): ?>
                 <a href="minha-conta.php" class="btn-nav" style="background: linear-gradient(135deg, var(--roxo-claro), var(--roxo-medio)); display: flex; align-items: center; gap: 6px;">
-                    <?php if (!empty($foto_perfil) && file_exists($foto_perfil)): ?>
+                    <?php if (lookvaultImageAvailable($foto_perfil)): ?>
                         <img src="<?php echo htmlspecialchars($foto_perfil); ?>" alt="Perfil" class="avatar-nav" />
                     <?php else: ?>
                         <span class="avatar-nav-placeholder"><i class="fas fa-user"></i></span>

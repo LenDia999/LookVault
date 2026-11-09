@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once 'configdatabase.php';
+require_once __DIR__ . '/includes/media-storage.php';
 
 if (!isset($_SESSION['usuario_id'])) {
     header('Location: login.php');
@@ -71,30 +72,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Atualizar foto
     if (isset($_POST['atualizar_foto'])) {
         if (isset($_FILES['foto_perfil']) && $_FILES['foto_perfil']['error'] === UPLOAD_ERR_OK) {
-            $upload_dir = 'uploads/perfil/';
-            if (!file_exists($upload_dir)) mkdir($upload_dir, 0777, true);
+            if ($_FILES['foto_perfil']['size'] > 5 * 1024 * 1024) {
+                $erro = 'A imagem deve ter no máximo 5 MB.';
+            } else {
+                $finfo = new finfo(FILEINFO_MIME_TYPE);
+                $mime = $finfo->file($_FILES['foto_perfil']['tmp_name']);
+                $extensoes = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+                if (!isset($extensoes[$mime])) {
+                    $erro = 'Formato inválido. Use JPG, PNG ou WEBP.';
+                } else {
+                    try {
+                        $caminho_arquivo = lookvaultSaveImage(
+                            $_FILES['foto_perfil']['tmp_name'],
+                            'uploads/perfil',
+                            $extensoes[$mime],
+                            $mime
+                        );
+                    } catch (RuntimeException $exception) {
+                        $erro = $exception->getMessage();
+                    }
+                }
+            }
 
-            $ext = strtolower(pathinfo($_FILES['foto_perfil']['name'], PATHINFO_EXTENSION));
-            $nome_arquivo = 'perfil_' . $usuario_id . '_' . time() . '.' . $ext;
-            $caminho_arquivo = $upload_dir . $nome_arquivo;
-
-            if (move_uploaded_file($_FILES['foto_perfil']['tmp_name'], $caminho_arquivo)) {
+            if ($erro === '' && isset($caminho_arquivo)) {
                 $conn = conectarDB();
                 $stmt = $conn->prepare("UPDATE usuarios SET foto_perfil = ? WHERE id = ?");
                 $stmt->bind_param("si", $caminho_arquivo, $usuario_id);
                 if ($stmt->execute()) {
+                    $fotoAntiga = $usuario['foto_perfil'] ?? '';
                     $usuario['foto_perfil'] = $caminho_arquivo;
                     $mensagem = 'Foto de perfil atualizada!';
+                    if ($fotoAntiga !== '') {
+                        lookvaultDeleteImage($fotoAntiga);
+                    }
                 } else {
+                    lookvaultDeleteImage($caminho_arquivo);
                     $erro = 'Erro ao salvar foto.';
                 }
                 $stmt->close();
                 $conn->close();
-            } else {
-                $erro = 'Erro ao fazer upload da foto.';
             }
-        } else {
+        } elseif (!isset($_FILES['foto_perfil']) || $_FILES['foto_perfil']['error'] === UPLOAD_ERR_NO_FILE) {
             $erro = 'Selecione uma imagem.';
+        } else {
+            $erro = 'Não foi possível enviar a imagem.';
         }
     }
 
@@ -161,7 +182,7 @@ include 'includes/header.php';
         <div class="profile-header-card animate-fade-up">
             <div class="profile-avatar-wrap">
                 <div class="profile-avatar-large" onclick="document.getElementById('fotoInput').click()">
-                    <?php if (!empty($usuario['foto_perfil']) && file_exists($usuario['foto_perfil'])): ?>
+                    <?php if (lookvaultImageAvailable($usuario['foto_perfil'] ?? '')): ?>
                         <img src="<?php echo htmlspecialchars($usuario['foto_perfil']); ?>" alt="Foto de perfil" />
                     <?php else: ?>
                         <span><i class="fas fa-user"></i></span>

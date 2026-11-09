@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once 'configdatabase.php';
+require_once __DIR__ . '/includes/media-storage.php';
 
 if (!isset($_SESSION['usuario_id'])) {
     header('Location: login.php');
@@ -134,7 +135,7 @@ include 'includes/header.php';
                              data-categoria="<?php echo htmlspecialchars($peca['categoria']); ?>"
                              data-nome="<?php echo htmlspecialchars(strtolower($peca['nome'] . ' ' . $peca['marca'] . ' ' . $peca['cor'])); ?>">
                         <div class="peca-card-image">
-                            <?php if (!empty($peca['foto']) && file_exists($peca['foto'])): ?>
+                            <?php if (lookvaultImageAvailable($peca['foto'] ?? '')): ?>
                                 <img src="<?php echo htmlspecialchars($peca['foto']); ?>" alt="<?php echo htmlspecialchars($peca['nome']); ?>" loading="lazy" />
                             <?php else: ?>
                                 <img src="https://via.placeholder.com/400x500/f5f0ea/b8a68c?text=<?php echo urlencode($peca['nome']); ?>" alt="<?php echo htmlspecialchars($peca['nome']); ?>" loading="lazy" />

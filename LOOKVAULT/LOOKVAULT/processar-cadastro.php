@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once 'configdatabase.php';
+require_once __DIR__ . '/includes/media-storage.php';
 
 if (!isset($_SESSION['usuario_id'])) {
     header('Location: login.php');
@@ -46,19 +47,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
 
-        $upload_dir = __DIR__ . '/uploads/pecas/';
-        if (!is_dir($upload_dir) && !mkdir($upload_dir, 0755, true)) {
-            header('Location: cadastro.php?erro=' . urlencode('Não foi possível preparar o envio da imagem.'));
+        try {
+            $foto = lookvaultSaveImage($_FILES['foto']['tmp_name'], 'uploads/pecas', $extensoes[$mime], $mime);
+        } catch (RuntimeException $exception) {
+            header('Location: cadastro.php?erro=' . urlencode($exception->getMessage()));
             exit;
         }
-
-        $nome_arquivo = bin2hex(random_bytes(16)) . '.' . $extensoes[$mime];
-        $caminho_arquivo = $upload_dir . $nome_arquivo;
-        if (!move_uploaded_file($_FILES['foto']['tmp_name'], $caminho_arquivo)) {
-            header('Location: cadastro.php?erro=' . urlencode('Não foi possível salvar a imagem.'));
-            exit;
-        }
-        $foto = 'uploads/pecas/' . $nome_arquivo;
     }
 
     // Inserir no banco
@@ -70,6 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($id) {
         header('Location: guarda-roupa.php?sucesso=Peça cadastrada com sucesso!');
     } else {
+        lookvaultDeleteImage($foto);
         header('Location: cadastro.php?erro=Erro ao cadastrar peça');
     }
 } else {

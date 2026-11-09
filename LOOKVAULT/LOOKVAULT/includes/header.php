@@ -3,6 +3,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 require_once __DIR__ . '/../configdatabase.php';
+require_once __DIR__ . '/media-storage.php';
 
 $logado = isset($_SESSION['usuario_id']);
 $usuario_nome = $_SESSION['usuario_nome'] ?? '';
@@ -61,7 +62,7 @@ $pagina_atual = basename($_SERVER['PHP_SELF']);
             <?php if ($logado): ?>
                 <a href="configuracoes.php" class="<?php echo $pagina_atual === 'configuracoes.php' ? 'active' : ''; ?>">Configurações</a>
                 <a href="minha-conta.php" class="btn-nav">
-                    <?php if (!empty($foto_perfil) && file_exists(__DIR__ . '/../' . $foto_perfil)): ?>
+                    <?php if (lookvaultImageAvailable($foto_perfil)): ?>
                         <img src="<?php echo htmlspecialchars($foto_perfil); ?>" alt="Perfil" class="avatar-nav" />
                     <?php else: ?>
                         <span class="avatar-nav-placeholder"><i class="fas fa-user"></i></span>

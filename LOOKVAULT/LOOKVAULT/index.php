@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once 'configdatabase.php';
+require_once __DIR__ . '/includes/media-storage.php';
 
 date_default_timezone_set('America/Sao_Paulo');
 
@@ -297,7 +298,7 @@ $logo_image = 'uploads/logo.png';
                     <a href="guarda-roupa.php" title="Meu Guarda-Roupa"><i class="ph ph-tshirt"></i></a>
                     <a href="combinacoes.php" title="Combinações"><i class="ph ph-magic-wand"></i></a>
                     <a href="minha-conta.php" class="profile-pic" title="Minha Conta">
-                        <?php if (!empty($foto_perfil) && file_exists($foto_perfil)): ?>
+                        <?php if (lookvaultImageAvailable($foto_perfil)): ?>
                             <img src="<?php echo htmlspecialchars($foto_perfil); ?>" alt="Perfil">
                         <?php else: ?>
                             <i class="ph ph-user"></i>

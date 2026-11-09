@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once 'configdatabase.php';
+require_once __DIR__ . '/includes/media-storage.php';
 
 if (!isset($_SESSION['usuario_id'])) {
     header('Location: login.php');
@@ -59,16 +60,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (!isset($extensoes[$mime])) {
                     $erro = 'Formato inválido. Use JPG, PNG ou WEBP.';
                 } else {
-                    $diretorio = __DIR__ . '/uploads/pecas/';
-                    if (!is_dir($diretorio) && !mkdir($diretorio, 0755, true)) {
-                        $erro = 'Não foi possível preparar o envio da imagem.';
-                    } else {
-                        $arquivo = bin2hex(random_bytes(16)) . '.' . $extensoes[$mime];
-                        if (move_uploaded_file($_FILES['foto']['tmp_name'], $diretorio . $arquivo)) {
-                            $novaFoto = 'uploads/pecas/' . $arquivo;
-                        } else {
-                            $erro = 'Não foi possível salvar a imagem.';
-                        }
+                    try {
+                        $novaFoto = lookvaultSaveImage($_FILES['foto']['tmp_name'], 'uploads/pecas', $extensoes[$mime], $mime);
+                    } catch (RuntimeException $exception) {
+                        $erro = $exception->getMessage();
                     }
                 }
             }
@@ -82,13 +77,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
             if ($ok === true) {
                 if ($novaFoto && !empty($peca['foto'])) {
-                    $fotoAntiga = __DIR__ . '/' . $peca['foto'];
-                    if (is_file($fotoAntiga)) @unlink($fotoAntiga);
+                    lookvaultDeleteImage($peca['foto']);
                 }
                 header('Location: guarda-roupa.php?sucesso=' . urlencode('Peça atualizada com sucesso!'));
                 exit;
             }
-            if ($novaFoto && is_file(__DIR__ . '/' . $novaFoto)) @unlink(__DIR__ . '/' . $novaFoto);
+            if ($novaFoto) lookvaultDeleteImage($novaFoto);
             $erro = 'Não foi possível atualizar a peça. Tente novamente.';
         }
 
@@ -159,7 +153,7 @@ include 'includes/header.php';
                 </div>
                 <div class="form-field"><label for="tags">Tags <span style="font-weight:400;color:var(--lv-texto-claro);text-transform:none;letter-spacing:0;">(separadas por vírgula)</span></label><input type="text" id="tags" name="tags" maxlength="255" value="<?= e($peca['tags'] ?? '') ?>" placeholder="Ex: verão, casual, social"></div>
                 <h3 class="form-section-title"><i class="fas fa-image"></i> Foto da Peça</h3>
-                <?php if (!empty($peca['foto']) && is_file(__DIR__ . '/' . $peca['foto'])): ?>
+                <?php if (lookvaultImageAvailable($peca['foto'] ?? '')): ?>
                     <div class="file-preview" style="margin-bottom:16px;"><img src="<?= e($peca['foto']) ?>" alt="Foto atual de <?= e($peca['nome']) ?>"><div class="file-preview-info"><strong>Foto atual</strong><div class="file-preview-name">Selecione outra imagem abaixo para substituí-la.</div></div></div>
                 <?php else: ?><p style="color:var(--lv-texto-claro);margin-bottom:14px;">Esta peça ainda não possui fotografia.</p><?php endif; ?>
                 <div class="file-upload-premium" id="fileUpload"><input type="file" id="foto" name="foto" accept="image/jpeg,image/png,image/webp" onchange="previewFoto(event)"><div class="file-upload-icon"><i class="fas fa-cloud-upload-alt"></i></div><div class="file-upload-text">Clique para selecionar uma nova imagem</div><div class="file-upload-hint">JPG, PNG ou WEBP • Máximo 5MB • Opcional</div></div>
