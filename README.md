@@ -2,15 +2,15 @@
 
 ## Deploy no Vercel
 
-O projeto usa o runtime **Container** do Vercel. O `Dockerfile` na raiz do
-repositório instala o PHP com `mysqli` e publica a aplicação localizada em
-`LOOKVAULT/LOOKVAULT`.
+O projeto usa o runtime **Container** do Vercel. Os arquivos `Dockerfile` e
+`Caddyfile` dentro de `LOOKVAULT/LOOKVAULT` publicam a aplicação PHP.
 
 Nas configurações do projeto Vercel:
 
-1. Deixe o **Root Directory** como a raiz do repositório.
+1. Configure o **Root Directory** como `LOOKVAULT/LOOKVAULT`; o build usa
+   somente arquivos dentro dessa pasta.
 2. Selecione **Container** como Framework Preset, caso o Vercel não detecte o
-   Dockerfile automaticamente.
+   Dockerfile nessa pasta.
 3. Configure estas variáveis no ambiente Production (e também em Preview, se
    for usar):
 
